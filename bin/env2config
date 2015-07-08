@@ -1,2 +1,2 @@
-#!/bin/sh
-python -m env2config $@
+#!/usr/bin/env python
+import env2config.cli
