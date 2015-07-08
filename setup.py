@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='env2config',
-    packages=['env2config'],
+    packages=['env2config', 'env2config.services'],
     version='0.2.1',
     scripts=['bin/env2config'],
     description='Generate config files from environment variables',
