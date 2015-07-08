@@ -29,8 +29,11 @@ def _inject_string_to_dict(string):
 def build(service_name, version, root_config_dir):
     '''Build Step'''
 
-    service = getattr(services, service_name)
-    default_configs = service.default_configs(version)
+    service_module = getattr(services, service_name)
+    service_class = getattr(service_module, service_name)
+    service = service_class(version)
+
+    default_configs = service.default_configs()
 
     # Create all of the directories that we need.
     # Go one-by-one to improve error reporting.
@@ -89,14 +92,17 @@ def _inject_service(service_name, version, config_dir):
     # We acces the functions we need up front to improve error handling.
     # Should this be replaced with classes?
 
-    service = getattr(services, service_name)
+    service_module = getattr(services, service_name)
+    service_class = getattr(service_module, service_name)
+    service = service_class(version)
 
-    blacklist = service.blacklist(version)
+
+    blacklist = service.ignore_env_names()
     convert_name = service.convert_name
     convert_value = service.convert_value
-    match = service.match
-    replace = service.replace
-    comment = service.comment
+    match = service.match_line
+    replace = service.inject_line
+    comment = service.comment_line
 
     # Determine which configuration files to inject by overriding
     # defaults defined by the service with arguments supplied in the
@@ -113,7 +119,7 @@ def _inject_service(service_name, version, config_dir):
     else:
         env_inject = _inject_string_to_dict(env_inject_string)
 
-    builtin = service.inject(version)
+    builtin = service.config_mapping()
     configs_to_inject = dict(builtin, **env_inject)
 
     # Collect injectable configs from all environment variables
