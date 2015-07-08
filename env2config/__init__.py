@@ -96,14 +96,6 @@ def _inject_service(service_name, version, config_dir):
     service_class = getattr(service_module, service_name)
     service = service_class(version)
 
-
-    blacklist = service.ignore_env_names()
-    convert_name = service.convert_name
-    convert_value = service.convert_value
-    match = service.match_line
-    replace = service.inject_line
-    comment = service.comment_line
-
     # Determine which configuration files to inject by overriding
     # defaults defined by the service with arguments supplied in the
     # {SERVICE_NAME}_INJECT environment varible.
@@ -127,6 +119,7 @@ def _inject_service(service_name, version, config_dir):
     # e.g. REDIS_FOO=1 => {'foo': '1'}
 
     injectables = {}
+    blacklist = service.ignore_env_names()
     for env_name, env_value in os.environ.items():
         if env_name in blacklist:
             continue
@@ -138,8 +131,8 @@ def _inject_service(service_name, version, config_dir):
             start = env_name.find('_') + 1
             config_part = env_name[start:]
 
-            config_name = convert_name(config_part)
-            config_value = convert_value(env_value)
+            config_name = service.convert_name(config_part)
+            config_value = service.convert_value(env_value)
 
             injectables[config_name] = config_value
 
@@ -156,10 +149,10 @@ def _inject_service(service_name, version, config_dir):
         matched = set()
         for default_line in default_lines:
             for name, value in injectables.items():
-                if match(default_line, name):
-                    new_line = replace(default_line, name, value)
+                if service.match_line(default_line, name):
+                    new_line = service.inject_line(default_line, name, value)
                     matched.add(name)
-                    note = comment('Injected by env2config, replacing default: ' + default_line.strip())
+                    note = service.comment_line('Injected by env2config, replacing default: ' + default_line.strip())
                     output_lines.append(note)
                     output_lines.append(new_line)
                     break
@@ -168,9 +161,9 @@ def _inject_service(service_name, version, config_dir):
 
         for name, value in injectables.items():
             if name not in matched:
-                warning = comment('Injected by env2config, not matching any default.')
+                warning = service.comment_line('Injected by env2config, not matching any default.')
                 output_lines.append(warning)
-                line = replace(None, name, value)
+                line = service.inject_line(None, name, value)
                 output_lines.append(line)
 
         # Write out the new, overridden configs.  If the destination is '-',
