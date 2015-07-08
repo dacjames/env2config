@@ -34,6 +34,8 @@ class redis(LineOriented):
 
     def ignore_env_names(self):
         return [
+            'REDIS_DOWNLOAD_URL',
+            'REDIS_DOWNLOAD_SHA1',
             'REDIS_VERSION',
             'REDIS_URL',
         ]
