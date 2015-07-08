@@ -86,7 +86,6 @@ def inject(root_config_dir):
 
 
 def _inject_service(service_name, version, config_dir):
-    print('config_dir', config_dir)
 
     # Load the service module and extract it's interface.
     # We acces the functions we need up front to improve error handling.

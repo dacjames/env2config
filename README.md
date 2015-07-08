@@ -13,7 +13,8 @@ dcollinsⓔenv2config:~$ tree ./default_configs
         └── redis.conf
 
 2 directories, 1 file
-dcollinsⓔenv2config:~$ cat ./default_configs/redis/3.0.1/redis.conf | grep -B 20 'appendonly'
+dcollinsⓔenv2config:~$ cat ./default_configs/redis/3.0.1/redis.conf \
+                            | grep -B 20 'appendonly'
 ############################## APPEND ONLY MODE ###############################
 
 # By default Redis asynchronously dumps the dataset on disk. This mode is
@@ -39,9 +40,11 @@ appendonly no
 
 # The name of the append only file (default: "appendonly.aof")
 --
-## NOTE: '-' is a special "path" that causes the injected config to be 
-## written to the screen.  Usually, this would be a 
-dcollinsⓔenv2config:~$ env REDIS_INJECT='redis.conf:-' REDIS_APPENDONLY=yes env2config inject ./default_configs | grep -B 20 appendonly
+## NOTE: '-' is a special "path", meaning stdout
+dcollinsⓔenv2config:~$ env REDIS_INJECT='redis.conf:-' \
+                            REDIS_APPENDONLY=yes \
+                            env2config inject ./default_configs \
+                            | grep -B 20 appendonly
 ############################## APPEND ONLY MODE ###############################
 
 # By default Redis asynchronously dumps the dataset on disk. This mode is
@@ -68,6 +71,16 @@ appendonly yes
 
 # The name of the append only file (default: "appendonly.aof")
 --
+dcollinsⓔenv2config:~$ env REDIS_INJECT='redis.conf:./redis.conf' \
+                            REDIS_APPENDONLY=yes \
+                            env2config inject ./default_configs
+
+dcollinsⓔenv2config:~$ diff default_configs/redis/3.0.1/redis.conf ./redis.conf
+504c504,505
+< appendonly no
+---
+> # Injected by env2config, replacing default: appendonly no
+> appendonly yes
 ```
 
 ## Supported Services
