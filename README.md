@@ -2,16 +2,24 @@
 
 `env2config` is a simple utility for generating configuration files that allows environment variables to override vendor-provided defaults.  It is primarily designed for use with containerization technologies like [Docker](https://www.docker.com/) and can be easily extended to support new configuration file formats.
 
+## Installation
+
+Only Python 3 works right now.
+```
+pip install git+https://github.com/dacjames/env2config.git@develop
+```
+
 ## Usage
 
 ```sh
+dcollinsⓔenv2config:~$ ls default_configs
+ls: default_configs: No such file or directory
 dcollinsⓔenv2config:~$ env2config build redis 3.0.1 ./default_configs
 dcollinsⓔenv2config:~$ tree ./default_configs
 ./default_configs
 └── redis
     └── 3.0.1
         └── redis.conf
-
 2 directories, 1 file
 dcollinsⓔenv2config:~$ cat ./default_configs/redis/3.0.1/redis.conf \
                             | grep -B 20 'appendonly'
