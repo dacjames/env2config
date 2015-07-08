@@ -56,3 +56,4 @@ docs/_build/
 
 # Py:qBuilder
 target/
+default_configs/
