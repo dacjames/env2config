@@ -4,9 +4,8 @@
 
 ## Installation
 
-Only Python 3 works right now.
 ```
-pip install git+https://github.com/dacjames/env2config.git@develop
+pip install env2config
 ```
 
 ## Usage
