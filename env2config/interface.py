@@ -9,6 +9,13 @@ class ServiceDefinition(object):
     def config_mapping(self):
         pass
 
+    def config_multiplex(self, config_name):
+        configs = self.default_configs()
+        assert len(configs) == 1, \
+            'You must override config_multiplex if a service has more than one config'
+        config = list(configs.keys())[0]
+        return config, config_name
+
     def ignore_env_names(self):
         pass
 

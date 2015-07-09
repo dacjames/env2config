@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+from fnmatch import fnmatch
 
 import env2config.services as services
 
@@ -16,12 +17,21 @@ def _version_path(root, service_name, version):
     return os.path.join(service, version)
 
 
-def _inject_string_to_dict(string):
+def _inject_string_to_dict(string, potential_filenames):
     config_pairs = string.split(',')
     config_dict = {}
     for config_pair in config_pairs:
         src, dest = config_pair.split(':')
-        config_dict[src] = dest
+        
+        # kinda blobbing
+        found = 0
+        for filename in potential_filenames:
+            if fnmatch(filename, src):
+                config_dict[filename] = dest
+                found += 1
+
+        if found == 0:
+            raise ValueError(src)
 
     return config_dict
 
@@ -104,11 +114,13 @@ def _inject_service(service_name, version, config_dir):
     env_prefix = service_name.upper()
     env_mapping_key = env_prefix + '_INJECT'
 
+    default_filenames = list(service.default_configs().keys())
+
     env_inject_string = os.environ.get(env_mapping_key)
     if env_inject_string is None:
         env_inject = {}
     else:
-        env_inject = _inject_string_to_dict(env_inject_string)
+        env_inject = _inject_string_to_dict(env_inject_string, default_filenames)
 
     builtin = service.config_mapping()
     configs_to_inject = dict(builtin, **env_inject)
@@ -130,10 +142,11 @@ def _inject_service(service_name, version, config_dir):
             start = env_name.find('_') + 1
             config_part = env_name[start:]
 
+            config_filename, config_part = service.config_multiplex(config_part)
             config_name = service.convert_name(config_part)
             config_value = service.convert_value(env_value)
 
-            injectables[config_name] = config_value
+            injectables[config_name] = (config_filename, config_value)
 
     # Scan over all configuration files and inject all injectables.
     # Has O(N*M) complexity, where N is len(default_configs)
@@ -147,7 +160,10 @@ def _inject_service(service_name, version, config_dir):
         output_lines = []
         matched = set()
         for default_line in default_lines:
-            for name, value in injectables.items():
+            for name, (target, value) in injectables.items():
+                if target != src:
+                    continue
+
                 if service.match_line(default_line, name):
                     new_line = service.inject_line(default_line, name, value)
                     matched.add(name)
@@ -158,7 +174,10 @@ def _inject_service(service_name, version, config_dir):
             else:
                 output_lines.append(default_line)
 
-        for name, value in injectables.items():
+        for name, (target, value) in injectables.items():
+            if target != src:
+                continue
+                
             if name not in matched:
                 warning = service.comment_line('Injected by env2config, not matching any default.')
                 output_lines.append(warning)
