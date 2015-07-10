@@ -8,6 +8,10 @@
 pip install env2config
 ```
 
+## Breaking Changes
+
+- `0.4.0`: Injection spec variable renamed from "{service}\_INJECT" to "ENV\_INJECT".
+
 ## Usage
 
 ```sh
@@ -93,6 +97,6 @@ dcollinsⓔenv2config:~$ diff default_configs/redis/3.0.1/redis.conf ./redis.con
 ## Supported Services
 
 - [redis](http://redis.io/)
-
+- [kafka](https://kafka.apache.org/)
 
 
