@@ -31,14 +31,9 @@ def _inject_string_to_dict(string, potential_filenames):
         src, dest = config_pair.split(':')
 
         # kinda blobbing
-        found = 0
         for filename in potential_filenames:
             if fnmatch(filename, src):
                 config_dict[filename] = dest
-                found += 1
-
-        if found == 0:
-            raise ValueError(src)
 
     logger.debug('parsed injection spec as %s', config_dict)
 
