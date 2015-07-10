@@ -8,8 +8,8 @@ DEFAULT_URL = \
     "https://raw.githubusercontent.com/apache/kafka/{version}/config/{filename}"
 
 
-class kafka(LineOriented):
-    name = 'kafka'
+class KafkaDefinition(LineOriented):
+    service_name = 'kafka'
 
     def default_configs(self):
         version = self.version
@@ -43,7 +43,6 @@ class kafka(LineOriented):
             filename: os.path.join(root, 'config', filename)
             for filename in self.default_configs()
         }
-        print(mapping)
         return mapping
 
     def config_multiplex(self, config_name):
@@ -68,8 +67,7 @@ class kafka(LineOriented):
 
     def match_line(self, line, config_name):
         content = line.replace('#', '').strip()
-        line_config = content.split(' ')[0]
-        matches = (line_config == config_name)
+        matches = content.startswith(config_name)
         return matches
 
     def inject_line(self, old_line, config_name, config_value):

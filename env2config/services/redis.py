@@ -6,8 +6,8 @@ DEFAULT_URL = \
     'https://raw.githubusercontent.com/antirez/redis/{version}/redis.conf'
 
 
-class redis(LineOriented):
-    name = 'redis'
+class RedisDefition(LineOriented):
+    service_name = 'redis'
 
     def default_configs(self):
         version = self.version
