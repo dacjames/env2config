@@ -67,7 +67,7 @@ class KafkaDefinition(LineOriented):
 
     def match_line(self, line, config_name):
         content = line.replace('#', '').strip()
-        matches = content.startswith(config_name)
+        matches = content.split('=')[0] == config_name
         return matches
 
     def inject_line(self, old_line, config_name, config_value):
