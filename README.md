@@ -8,6 +8,10 @@
 pip install env2config
 ```
 
+## Breaking Changes
+
+- `0.4.0`: Injection spec variable renamed from "{service}\_INJECT" to "ENV\_INJECT".
+
 ## Usage
 
 ```sh
@@ -48,7 +52,7 @@ appendonly no
 # The name of the append only file (default: "appendonly.aof")
 --
 ## NOTE: '-' is a special "path", meaning stdout
-dcollinsⓔenv2config:~$ env REDIS_INJECT='redis.conf:-' \
+dcollinsⓔenv2config:~$ env ENV_INJECT='redis.conf:-' \
                             REDIS_APPENDONLY=yes \
                             env2config inject ./default_configs \
                             | grep -B 20 appendonly
@@ -78,7 +82,7 @@ appendonly yes
 
 # The name of the append only file (default: "appendonly.aof")
 --
-dcollinsⓔenv2config:~$ env REDIS_INJECT='redis.conf:./redis.conf' \
+dcollinsⓔenv2config:~$ env ENV_INJECT='redis.conf:./redis.conf' \
                             REDIS_APPENDONLY=yes \
                             env2config inject ./default_configs
 
@@ -93,6 +97,6 @@ dcollinsⓔenv2config:~$ diff default_configs/redis/3.0.1/redis.conf ./redis.con
 ## Supported Services
 
 - [redis](http://redis.io/)
-
+- [kafka](https://kafka.apache.org/)
 
 
