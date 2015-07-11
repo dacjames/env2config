@@ -39,10 +39,10 @@ class KafkaDefinition(LineOriented):
             version=self.version
         )
 
-        mapping = {
-            filename: os.path.join(root, 'config', filename)
+        mapping = dict(
+            (filename, os.path.join(root, 'config', filename))
             for filename in self.default_configs()
-        }
+        )
         return mapping
 
     def config_multiplex(self, config_name):

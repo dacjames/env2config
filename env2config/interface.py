@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
+from future.utils import with_metaclass
+
 import env2config.util as util
 logger = util.create_logger()
 
@@ -25,8 +27,7 @@ class PluginMount(ABCMeta):
                 logger.debug('class %s not registered as a plugin because it lacks a "service_name" property', cls)
 
 
-class ServiceDefinition(object):
-    __metaclass__ = PluginMount
+class ServiceDefinition(with_metaclass(PluginMount, object)):
 
     def __init__(self, version):
         self.version = version

@@ -9,7 +9,7 @@ setup(
     author='Daniel Collins',
     author_email='peterldowns@gmail.com',
     url='https://github/dacjames/env2config',
-    install_requires=['requests'],
+    install_requires=['requests', 'future'],
     keywords=[],
     classifiers=[],
 )

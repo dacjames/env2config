@@ -8,8 +8,21 @@
 pip install env2config
 ```
 
+As of version 0.5.0, tested with Python versions: 
+* 2.6
+* 2.7
+* 3.3
+* 3.4
+
+Probably supports Python versions:
+* 3.2 (untested due to installation problems on OSX)
+* 3.5 (occasionally tested)
+
+Support for Python 2.5 and earlier is unlikely because the [python-future](http://python-future.org/) library does not support it, following [recommendations](http://lucumr.pocoo.org/2013/5/21/porting-to-python-3-redux/) of well respected Python developers.
+
 ## Breaking Changes
 
+- `0.5.0`: Enabled `from __future__ import unicode_strings`.
 - `0.4.0`: Injection spec variable renamed from "{service}\_INJECT" to "ENV\_INJECT".
 
 ## Usage
