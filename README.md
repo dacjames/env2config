@@ -4,6 +4,8 @@
 
 ## Installation
 
+[![Build Status](https://travis-ci.org/dacjames/env2config.svg?branch=master)](https://travis-ci.org/dacjames/env2config)
+
 ```
 pip install env2config
 ```
