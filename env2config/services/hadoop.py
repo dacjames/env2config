@@ -6,7 +6,7 @@ from lxml.builder import E
 from env2config.interface import RewriteOriented
 from env2config.conversions import dotted_lower
 
-HADOOP_URL = "https://hadoop.apache.org/docs/r{version}/{config_path}"
+HADOOP_URL = "http://hadoop.apache.org/docs/r{version}/{config_path}"
 
 
 class HadoopDefinition(RewriteOriented):
