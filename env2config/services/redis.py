@@ -1,6 +1,7 @@
 import requests as r
 
 from env2config.interface import LineOriented
+from env2config.conversions import dashed_lower
 
 DEFAULT_URL = \
     'https://raw.githubusercontent.com/antirez/redis/{version}/redis.conf'
@@ -41,9 +42,7 @@ class RedisDefition(LineOriented):
         ]
 
     def convert_name(self, config_name):
-        parts = config_name.split('_')
-        formatted = '-'.join(p.lower() for p in parts)
-        return formatted
+        return dashed_lower(config_name)
 
     def convert_value(self, config_value):
         return config_value

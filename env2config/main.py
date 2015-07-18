@@ -3,7 +3,7 @@ import sys
 import json
 from fnmatch import fnmatch
 
-import env2config.services as services
+import env2config.services
 import env2config.util as util
 from env2config.interface import ServiceDefinition
 
@@ -171,59 +171,12 @@ def _inject_service(service_name, version, config_dir):
             logger.debug('found potential inject (name: %s, value: %s) into %s', config_name, config_value, config_filename)
             injectables[config_name] = (config_filename, config_value)
 
-    # Scan over all configuration files and inject all injectables.
-    # Has O(N*M) complexity, where N is len(default_configs)
-    # and M is len(injectables).  Can we do better?
-
-    for src, dest in configs_to_inject.items():
-        default = os.path.join(config_dir, src)
-        logger.debug('considering default config %s', default)
-        with open(default) as f:
-            default_lines = f.readlines()
-
-        logger.debug('loaded default config with %d lines', len(default_lines))
-
-        output_lines = []
-        matched = set()
-        for default_line in default_lines:
-            for name, (target, value) in injectables.items():
-                if target != src:
-                    continue
-
-                if service.match_line(default_line, name):
-                    logger.debug('found matching line %r for %s', default_line, name)
-                    logger.debug('injecting (name: %s, value: %s) into %s', name, value, target)
-                    new_line = service.inject_line(default_line, name, value)
-                    matched.add(name)
-                    note = service.comment_line('Injected by env2config, replacing default: ' + default_line.strip())
-                    output_lines.append(note)
-                    output_lines.append(new_line)
-                    break
-            else:
-                output_lines.append(default_line)
-
-        for name, (target, value) in injectables.items():
-            if target != src:
-                continue
-                
-            if name not in matched:
-                logger.debug('injecting (name: %s, value: %s) to the end of %s', name, value, target)
-                warning = service.comment_line('Injected by env2config, not matching any default.')
-                output_lines.append(warning)
-                line = service.inject_line(None, name, value)
-                output_lines.append(line)
-
-        # Write out the new, overridden configs.  If the destination is '-',
-        # write the configs to stdout instead (useful for debugging).
-        # Is there a way to avoid this code deduplication?
-
-        if dest == '-':
-            f = sys.stdout
-            for line in output_lines:
-                f.write(line)
-        else:
-            with open(dest, 'w') as f:
-                for line in output_lines:
-                    f.write(line)
+    processor = service.Processor(
+        service=service,
+        config_dir=config_dir,
+        configs_to_inject=configs_to_inject,
+        injectables=injectables,
+    )
+    processor.process()
 
     return True
