@@ -17,6 +17,17 @@ LOG_FORMAT = '[%(asctime)s] env2config.%(module)s %(levelname)s: %(message)s'
 _logger = None
 
 
+def write_bytes(device, content):
+    '''
+    Python 2/3 compatible function for writing binary data (not unicode)
+    to stdout or stderr
+    '''
+    if sys.version_info >= (3, 0):
+        device.buffer.write(content)
+    else:
+        device.write(content)
+
+
 def tags_to_dict(tag_list):
     if tag_list is None or tag_list == []:
         return {}

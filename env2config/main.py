@@ -36,22 +36,36 @@ def _parse_inject_src(src, potential_filenames):
     if src.startswith('/'):
         # absolute path refers to a local file, not a configured default
         src_user = os.path.expanduser(src)
+
         globbed = glob(src_user)
         if len(globbed) == 0:
             logger.warn('spec src %s not found. Was expanded to %s', src, src_user)
 
         for abs_src in globbed:
-            src_filename = os.path.basename(abs_src)
-
-            for filename in potential_filenames:
-                if fnmatch(filename, src_filename):
-                    yield abs_src, filename
+            if os.path.isdir(abs_src):
+                logger.debug('scanning directory src %s', abs_src)
+                # if it is a directory, scan for supported files.
+                potential_set = set(potential_filenames)
+                for filename in os.listdir(abs_src):
+                    logger.debug('found file %s', filename)
+                    if filename in potential_set:
+                        yield os.path.join(abs_src, filename), filename
+                        break
+            else:
+                # if abs_src is a file, ensure it's basename matches
+                src_filename = os.path.basename(abs_src)
+                for filename in potential_filenames:
+                    if fnmatch(filename, src_filename):
+                        yield abs_src, filename
+                        break
+                else:
+                    raise ValueError('spec src %s does not match an supported config file.' % abs_src)
 
     else:
         # relative path refers to a supported default
         for filename in potential_filenames:
             if fnmatch(filename, src):
-                yield filename, filename
+                yield filename, None
 
 
 def _inject_string_to_dict(string, potential_filenames):
@@ -64,10 +78,18 @@ def _inject_string_to_dict(string, potential_filenames):
 
         for src, matching in _parse_inject_src(src, potential_filenames):
             config_dict[src] = dest
-            override.add(matching)
+            # matching is either None or the name of the config file overriden by a local file.
+            # in the latter case, we delete the config file from the config_dict
+            # so that this iterations correctly overrides previous iterations with non-local files.
+            if matching is not None:
+                override.add(matching)
+                if matching in config_dict:
+                    del config_dict[matching]
 
     logger.debug('parsed injection spec as %s', config_dict)
-
+    # override is a set containing all of the configs overriden by local src's
+    # returned here so that the caller can ignore these configs when joining
+    # the spec with the default.
     return config_dict, override
 
 

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import sys
 import os
 from abc import ABCMeta, abstractmethod
@@ -7,6 +8,20 @@ from future.utils import with_metaclass
 import env2config.util as util
 
 logger = util.create_logger()
+
+
+def write_config(dest, filename, content):
+    content = content.encode('utf-8')
+
+    if dest == '-':
+        util.write_bytes(sys.stdout, content)
+    elif os.path.isdir(dest):
+        path = os.path.join(dest, filename)
+        with open(path, 'wb') as f:
+            f.write(content)
+    else:
+        with open(dest, 'wb') as f:
+            f.write(content)
 
 
 class AbstractProcessor(with_metaclass(ABCMeta, object)):
@@ -44,6 +59,10 @@ class RewriteProcessor(AbstractProcessor):
         logger.debug('wtf %s', self.configs_to_inject)
 
         for src, dest in self.configs_to_inject.items():
+            if dest == '':
+                logger.debug('skipping config file %s because the dest is \'\'')
+                continue
+
             default = os.path.join(self.config_dir, src)
             logger.debug('considering default config %s', default)
 
@@ -59,11 +78,7 @@ class RewriteProcessor(AbstractProcessor):
             logger.debug('injecting model %s', override_model)
             new_content = str(self.service.inject_file(default_model, override_model))
 
-            if dest == '-':
-                sys.stdout.write(new_content)
-            else:
-                with open(dest, 'wb') as f:
-                    f.write(new_content)
+            write_config(dest, src_filename, new_content)
 
 
 class LineProcessor(AbstractProcessor):
@@ -74,6 +89,10 @@ class LineProcessor(AbstractProcessor):
         and M is len(injectables).  Can we do better?
         '''
         for src, dest in self.configs_to_inject.items():
+            if dest == '':
+                logger.debug('skipping config file %s because the dest is \'\'')
+                continue
+
             default = os.path.join(self.config_dir, src)
             logger.debug('considering default config %s', default)
             with open(default) as f:
@@ -103,7 +122,7 @@ class LineProcessor(AbstractProcessor):
             for name, (target, value) in self.injectables.items():
                 if target != src:
                     continue
-                    
+
                 if name not in matched:
                     logger.debug('injecting (name: %s, value: %s) to the end of %s', name, value, target)
                     warning = self.service.comment_line('Injected by env2config, not matching any default.')
@@ -111,16 +130,6 @@ class LineProcessor(AbstractProcessor):
                     line = self.service.inject_line(None, name, value)
                     output_lines.append(line)
 
-            # Write out the new, overridden configs.  If the destination is '-',
-            # write the configs to stdout instead (useful for debugging).
-            # Is there a way to avoid this code deduplication?
-
-            if dest == '-':
-                f = sys.stdout
-                for line in output_lines:
-                    f.write(line)
-            else:
-                with open(dest, 'w') as f:
-                    for line in output_lines:
-                        f.write(line)
-
+            new_content = ''.join(output_lines)
+            src_filename = os.path.basename(src)
+            write_config(dest, src_filename, new_content)
