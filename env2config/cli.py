@@ -1,7 +1,9 @@
 import sys
+import argparse
 
 from env2config.main import build
 from env2config.main import inject
+from env2config.util import tags_to_dict, create_logger
 
 USAGE = '''
 USAGE:
@@ -9,35 +11,45 @@ USAGE:
     env2config inject [<default_config_folder>=./default_configs]
 '''.strip()
 
+
 def ensure(result):
     if result is True:
         sys.exit(0)
     else:
         sys.exit(2)
 
-if len(sys.argv) < 2:
-    print(USAGE)
-    sys.exit(1)
+logger = create_logger()
 
-if sys.argv[1] not in ['build', 'inject']:
-    print(USAGE)
-    sys.exit(1)
+parser = argparse.ArgumentParser(description='Inject variables into configuration files.')
+cmd_parsers = parser.add_subparsers()
 
-if sys.argv[1] == 'build' and len(sys.argv) == 4:
-    process, command, service_name, version = sys.argv
-    ensure(build(service_name, version, './default_configs'))
+build_cmd = cmd_parsers.add_parser('build', help='Download default configuration files.')
+inject_cmd = cmd_parsers.add_parser('inject', help='Inject variables to override configuration files.')
 
-if sys.argv[1] == 'build' and len(sys.argv) == 5:
-    process, command, service_name, version, default_config_folder = sys.argv
-    ensure(build(service_name, version, default_config_folder))
+build_cmd.add_argument('service_name')
+build_cmd.add_argument('version')
+build_cmd.add_argument('default_config_folder', nargs='?', default='./default_configs')
+build_cmd.add_argument('-t', '--tag', action='append')
 
-if sys.argv[1] == 'inject' and len(sys.argv) == 2:
-    process, command, default_config_folder = sys.argv
-    ensure(inject('./default_configs'))
+inject_cmd.add_argument('default_config_folder', nargs='?', default='./default_configs')
 
-if sys.argv[1] == 'inject' and len(sys.argv) == 3:
-    process, command, default_config_folder = sys.argv
-    ensure(inject(default_config_folder))
+
+def main_build(args):
+    logger.debug('args: %s', args)
+    tags = tags_to_dict(args.tag)
+    ensure(build(args.service_name, args.version, args.default_config_folder, tags))
+
+build_cmd.set_defaults(func=main_build)
+
+
+def main_inject(args):
+    logger.debug('args: %s', args)
+    ensure(inject(args.default_config_folder))
+
+inject_cmd.set_defaults(func=main_inject)
+
+args = parser.parse_args()
+args.func(args)
 
 print(USAGE)
 sys.exit(1)

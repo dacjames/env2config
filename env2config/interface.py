@@ -31,8 +31,9 @@ class PluginMount(ABCMeta):
 
 class ServiceDefinition(with_metaclass(PluginMount, object)):
 
-    def __init__(self, version):
+    def __init__(self, version, tags):
         self.version = version
+        self.tags = tags
 
     @classmethod
     def get_service_class(cls, service_name):

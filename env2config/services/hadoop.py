@@ -16,7 +16,15 @@ logger = create_logger()
 class HadoopDefinition(RewriteOriented):
     service_name = 'hadoop'
 
+    def get_tags(self):
+        return {
+            'distribution': self.tags.get('distribution', 'apache')
+        }
+
     def default_configs(self):
+        distribution = self.get_tags()['distribution']
+        assert distribution == 'apache', 'Only apache hadoop distribution is supported for now.'
+
         def loader(config_path):
             url = HADOOP_URL.format(version=self.version, config_path=config_path)
             response = r.get(url)

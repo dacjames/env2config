@@ -11,6 +11,11 @@ DEFAULT_URL = \
 class KafkaDefinition(LineOriented):
     service_name = 'kafka'
 
+    def get_tags(self):
+        return {
+            'scala': self.tags.get('scala', '2.11')
+        }
+
     def default_configs(self):
         version = self.version
 
@@ -34,8 +39,10 @@ class KafkaDefinition(LineOriented):
         }
 
     def config_mapping(self):
+        scala_version = self.get_tags()['scala']
+
         root = '/opt/kafka_{scala_version}-{version}'.format(
-            scala_version='2.11',
+            scala_version=scala_version,
             version=self.version
         )
 
