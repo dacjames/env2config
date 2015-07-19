@@ -105,7 +105,7 @@ dcollinsⓔenv2config:~$ diff default_configs/redis/3.0.1/redis.conf ./redis.con
 
 ## Injection Specification
 
-The ENV_INJECT environment variable is used to contol what files will be injected.  It takes the form: `{src}:{dest},{src}:{dest},...`, where each `{src},{dest}` pair is known as an *injection spec*.
+The ENV_INJECT environment variable is used to **override** what service configuration files will be injected.  If no injection spec is provided, all configs in the default_configs directory will be injected. It takes the form: `{src}:{dest},{src}:{dest},...`, where each `{src},{dest}` pair is known as an *injection spec*.
 
 `{src}` can be either:
 
@@ -121,9 +121,20 @@ The ENV_INJECT environment variable is used to contol what files will be injecte
 - An absolute path to the output configuration file path, e.g. `/data/redis.conf`
 - An absolute path to a directory, e.g. `/data/`.  The directory should end with a trailing '/' for clarity but it does not affect the behavior.  Matched configs will be written to this directory with their existing filename.
 - The special "file" `-`, meaning stdout.  This is especially useful for testing and debugging.
+- Nothing, aka `''`.  This means do not inject this config.
 
-Injection specs are processed in order and override previous specs.  One common use of this feature is `ENV_INJECT='*:/dev/null,redis.conf:-`, which sends all configs except redis.conf to /dev/null and prints redis.conf to stdout.
+**Injection specs are processed in order and override previous specs**.  One common use of this feature is `ENV_INJECT='*:,redis.conf:-`, which ignores all configs except redis.conf and prints redis.conf to stdout.
 
+## Philosophy
+
+`env2config` is an opinionated tool, in the sense that it provides built-in functionality for the user rather than being fully generic.  The design is driven by a few philisophical tenants derived from the authors' experience.
+
+- Most configuration tasks fall into two categories: overriding default values and providing required "arguments."
+- Keeping local configuration up to date with changing upstream defaults is a good thing.
+- As much information as possible, including comments, should be preserved.
+- Programs should be optimized, in both performance and style, for the most common use cases, at the cost of less common use cases if necessary. 
+
+Please submit an issue if the implementation of `env2config` does not follow these tenants in your practical use.  Likewise, readability is very important, so please submit a PR if you feel any code in this project is difficult to read or overly abstracted.
 
 ## Supported Services
 

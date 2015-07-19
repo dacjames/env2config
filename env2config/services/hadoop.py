@@ -44,7 +44,9 @@ class HadoopDefinition(RewriteOriented):
 
     def config_mapping(self):
         return {
-            'hdfs-site.xml': '/etc/hadoop/conf/hdfs-site.xml'
+            'hdfs-site.xml': '/etc/hadoop/conf/hdfs-site.xml',
+            'yarn-site.xml': '/etc/hadoop/conf/yarn-site.xml',
+            'mapred-site.xml': '/etc/hadoop/conf/mapred-site.xml',
         }
 
     def config_multiplex(self, config_name):
@@ -99,8 +101,9 @@ class HadoopDefinition(RewriteOriented):
             if isinstance(value_description, basestring):
                 value_description = (
                     value_description,
-                    "Injected by env2config.  Default description was: {0}".format(
-                        default_model.get(name, (None, ''))[1]
+                    "Injected by env2config.  Default value was: {0}. Default description was: {1}".format(
+                        default_model.get(name, ('', None))[0],
+                        default_model.get(name, (None, ''))[1],
                     )
                 )
             value, description = value_description

@@ -41,6 +41,7 @@ class RewriteProcessor(AbstractProcessor):
             injectables_by_config[config_filename][config_name] = config_value
 
         logger.debug('converted injectables to nest dict %s', injectables_by_config)
+        logger.debug('wtf %s', self.configs_to_inject)
 
         for src, dest in self.configs_to_inject.items():
             default = os.path.join(self.config_dir, src)
@@ -51,7 +52,9 @@ class RewriteProcessor(AbstractProcessor):
 
             default_model = self.service.parse_file(default_content)
             logger.debug('parsed default file %s into model with keys %s', default, default_model.keys())
-            override_model = injectables_by_config[src]
+
+            src_filename = os.path.basename(src)  # src might be an absolute path.
+            override_model = injectables_by_config[src_filename]
 
             logger.debug('injecting model %s', override_model)
             new_content = str(self.service.inject_file(default_model, override_model))

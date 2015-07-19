@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+from glob import glob
 from fnmatch import fnmatch
 
 import env2config.services
@@ -30,21 +31,44 @@ def _version_path(root, version):
     return os.path.join(root, version)
 
 
+def _parse_inject_src(src, potential_filenames):
+    src = src.strip()
+    if src.startswith('/'):
+        # absolute path refers to a local file, not a configured default
+        src_user = os.path.expanduser(src)
+        globbed = glob(src_user)
+        if len(globbed) == 0:
+            logger.warn('spec src %s not found. Was expanded to %s', src, src_user)
+
+        for abs_src in globbed:
+            src_filename = os.path.basename(abs_src)
+
+            for filename in potential_filenames:
+                if fnmatch(filename, src_filename):
+                    yield abs_src, filename
+
+    else:
+        # relative path refers to a supported default
+        for filename in potential_filenames:
+            if fnmatch(filename, src):
+                yield filename, filename
+
+
 def _inject_string_to_dict(string, potential_filenames):
     logger.debug('reading injection spec "%s"', string)
     config_pairs = string.split(',')
     config_dict = {}
+    override = set()
     for config_pair in config_pairs:
         src, dest = config_pair.split(':')
 
-        # kinda blobbing
-        for filename in potential_filenames:
-            if fnmatch(filename, src):
-                config_dict[filename] = dest
+        for src, matching in _parse_inject_src(src, potential_filenames):
+            config_dict[src] = dest
+            override.add(matching)
 
     logger.debug('parsed injection spec as %s', config_dict)
 
-    return config_dict
+    return config_dict, override
 
 
 def build(service_name, version, root_config_dir, tags):
@@ -174,10 +198,12 @@ def _inject_service(service_name, version, config_dir, tags):
     env_inject_string = os.environ.get(ENV_INJECT_KEY)
     if env_inject_string is None:
         env_inject = {}
+        env_overriden = set()
     else:
-        env_inject = _inject_string_to_dict(env_inject_string, default_filenames)
+        env_inject, env_overriden = _inject_string_to_dict(env_inject_string, default_filenames)
 
-    configs_to_inject = dict(builtin, **env_inject)
+    not_overriden = dict((k, v) for k, v in builtin.items() if k not in env_overriden)
+    configs_to_inject = dict(not_overriden, **env_inject)
     logger.debug('resolved to inject configs %s', configs_to_inject)
 
     # Collect injectable configs from all environment variables
