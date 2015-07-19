@@ -24,8 +24,43 @@ class AbstractProcessor(with_metaclass(ABCMeta, object)):
 class RewriteProcessor(AbstractProcessor):
     def process(self):
         '''
+        Scan over all configuration files and rewrite them.
         '''
-        pass
+        # convert a dict like {name: (filename, value), ...}
+        # to a nest dict like {filename: {name: value, ...}, ...}
+        # should this be the canonical format?
+
+        logger.debug('injectables dict %s', self.injectables)
+
+        injectables_by_config = dict(
+            (filename, {})
+            for filename in self.service.default_configs()
+        )
+
+        for config_name, (config_filename, config_value) in self.injectables.items():
+            injectables_by_config[config_filename][config_name] = config_value
+
+        logger.debug('converted injectables to nest dict %s', injectables_by_config)
+
+        for src, dest in self.configs_to_inject.items():
+            default = os.path.join(self.config_dir, src)
+            logger.debug('considering default config %s', default)
+
+            with open(default) as f:
+                default_content = f.read()
+
+            default_model = self.service.parse_file(default_content)
+            logger.debug('parsed default file %s into model with keys %s', default, default_model.keys())
+            override_model = injectables_by_config[src]
+
+            logger.debug('injecting model %s', override_model)
+            new_content = str(self.service.inject_file(default_model, override_model))
+
+            if dest == '-':
+                sys.stdout.write(new_content)
+            else:
+                with open(dest, 'wb') as f:
+                    f.write(new_content)
 
 
 class LineProcessor(AbstractProcessor):

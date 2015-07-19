@@ -90,7 +90,7 @@ def inject(root_config_dir):
     '''Inject Step'''
 
     configs_to_inject = []
-    logger.debug('injecting configs from directory %s')
+    logger.debug('injecting configs from directory %s', root_config_dir)
 
     # e.g. ./default_configs
     for service_name in os.listdir(root_config_dir):

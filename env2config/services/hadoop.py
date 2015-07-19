@@ -2,11 +2,15 @@
 import requests as r
 from lxml import etree
 from lxml.builder import E
+from past.builtins import basestring
 
 from env2config.interface import RewriteOriented
 from env2config.conversions import dotted_lower
+from env2config.util import create_logger
 
 HADOOP_URL = "http://hadoop.apache.org/docs/r{version}/{config_path}"
+
+logger = create_logger()
 
 
 class HadoopDefinition(RewriteOriented):
@@ -35,6 +39,18 @@ class HadoopDefinition(RewriteOriented):
             'hdfs-site.xml': '/etc/hadoop/conf/hdfs-site.xml'
         }
 
+    def config_multiplex(self, config_name):
+        split_point = config_name.find('_')
+        prefix = config_name[:split_point]
+        rest = config_name[split_point + 1:]
+
+        config_file = {
+            'HDFS': 'hdfs-site.xml',
+            'YARN': 'yarn-site.xml',
+            'MAPRED': 'mapred-site.xml',
+        }[prefix]
+        return config_file, rest
+
     def convert_name(self, config_value):
         return dotted_lower(config_value)
 
@@ -48,10 +64,20 @@ class HadoopDefinition(RewriteOriented):
     def parse_file(self, text_content):
         xml = etree.XML(text_content)
         properties = xml.iter('property')
+
+        def find_text(prop, elem_name):
+            elem = prop.find(elem_name)
+            if elem is None:
+                return ''
+            else:
+                if elem.text is None:
+                    return ''
+                else:
+                    return elem.text
         pairs = (
             (
-                prop.get('name', ''),
-                (prop.get('value'), prop.get('description', ''))
+                find_text(prop, 'name'),
+                (find_text(prop, 'value'), find_text(prop, 'description'))
             ) for prop in properties
         )
 
@@ -61,13 +87,21 @@ class HadoopDefinition(RewriteOriented):
         updated_model = dict(default_model, **config_model)
 
         properties = []
-        for name, (value, description) in updated_model:
+        for name, value_description in updated_model.items():
+            if isinstance(value_description, basestring):
+                value_description = (
+                    value_description,
+                    "Injected by env2config.  Default description was: {0}".format(
+                        default_model.get(name, (None, ''))[1]
+                    )
+                )
+            value, description = value_description
             properties.append(E.property(
-                name=name,
-                value=value,
-                description=description,
+                E.name(name),
+                E.value(value),
+                E.description(description),
             ))
 
         xml = E.configuration(*properties)
-        xml_text = etree.tostring(xml)
+        xml_text = etree.tostring(xml, pretty_print=True, encoding='utf-8', xml_declaration=True)
         return xml_text
