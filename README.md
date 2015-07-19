@@ -114,13 +114,13 @@ The ENV_INJECT environment variable is used to contol what files will be injecte
 - An absolute path to a directory, e.g. `/etc/redis/`.  The directory should end with a trailing '/' for clarity but it does not affect the behavior.  The directory will be searched for supported config files.
 - A "glob" of any of the above, e.g. `*.conf`.  Globs are expanded using Python's builtin `fnmatch` and `glob` modules, plus `~` will expand to the current user home.
 
-**The leading '/' is used to differentiate between a local source and a supported default config.**
+**The leading `/` is used to differentiate between a local source and a supported default config.**
 
 `{dest}` can be either:
 
 - An absolute path to the output configuration file path, e.g. `/data/redis.conf`
 - An absolute path to a directory, e.g. `/data/`.  The directory should end with a trailing '/' for clarity but it does not affect the behavior.  Matched configs will be written to this directory with their existing filename.
-- The special "file" `-`, meaning stdout.  This is especially usefull for testing and debugging.
+- The special "file" `-`, meaning stdout.  This is especially useful for testing and debugging.
 
 Injection specs are processed in order and override previous specs.  One common use of this feature is `ENV_INJECT='*:/dev/null,redis.conf:-`, which sends all configs except redis.conf to /dev/null and prints redis.conf to stdout.
 
@@ -129,6 +129,6 @@ Injection specs are processed in order and override previous specs.  One common 
 
 - [redis](http://redis.io/)
 - [kafka](https://kafka.apache.org/)
-- [hadoop](https://hadoop.apache.org/)(work in progress)
+- [hadoop](https://hadoop.apache.org/) (work in progress)
 
 
