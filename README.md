@@ -16,8 +16,6 @@ As of version 0.5.0, tested with Python versions:
 * 3.3
 * 3.4
 
-Support for Python 2.5 and earlier is unlikely because the [python-future](http://python-future.org/) library does not support it, following [recommendations](http://lucumr.pocoo.org/2013/5/21/porting-to-python-3-redux/) of well respected Python developers.
-
 ## Breaking Changes
 
 - `0.5.0`: Enabled `from __future__ import unicode_strings`.
@@ -105,9 +103,45 @@ dcollinsⓔenv2config:~$ diff default_configs/redis/3.0.1/redis.conf ./redis.con
 > appendonly yes
 ```
 
+## Injection Specification
+
+The ENV_INJECT environment variable is used to **override** what service configuration files will be injected.  If no injection spec is provided, all configs in the default_configs directory will be injected. It takes the form: `{src}:{dest},{src}:{dest},...`, where each `{src},{dest}` pair is known as an *injection spec*.
+
+`{src}` can be either:
+
+- A name of a supported default configuration file, e.g. `redis.conf`.  Must the *filename*, not a path.
+- An absolute path to a configuration file, e.g. `/etc/redis/redis.conf`.  The config file must have be supported by a service definition.
+- An absolute path to a directory, e.g. `/etc/redis/`.  The directory should end with a trailing '/' for clarity but it does not affect the behavior.  The directory will be searched for supported config files.
+- A "glob" of any of the above, e.g. `*.conf`.  Globs are expanded using Python's builtin `fnmatch` and `glob` modules, plus `~` will expand to the current user home.
+
+**The leading `/` is used to differentiate between a local source and a supported default config.**
+
+`{dest}` can be either:
+
+- An absolute path to the output configuration file path, e.g. `/data/redis.conf`
+- An absolute path to a directory, e.g. `/data/`.  The directory should end with a trailing '/' for clarity but it does not affect the behavior.  Matched configs will be written to this directory with their existing filename.
+- The special "file" `-`, meaning stdout.  This is especially useful for testing and debugging.
+- Nothing, aka `''`.  This means do not inject this config.
+
+**Injection specs are processed in order and override previous specs**.  One common use of this feature is `ENV_INJECT='*:,redis.conf:-`, which ignores all configs except redis.conf and prints redis.conf to stdout.
+
+## Philosophy
+
+`env2config` is an opinionated tool, in the sense that it provides built-in functionality for the user rather than being fully generic.  The design is driven by a few philisophical tenants derived from the authors' experience.
+
+- Most configuration tasks fall into two categories: overriding default values and providing required "arguments."
+- Keeping local configuration up to date with changing upstream defaults is a good thing.
+- As much information as possible, including comments, should be preserved.
+- Programs should be optimized, in both performance and style, for the most common use cases, at the cost of less common use cases if necessary. 
+
+Please submit an issue if the implementation of `env2config` does not follow these tenants in your practical use.  Likewise, readability is very important, so please submit a PR if you feel any code in this project is difficult to read or overly abstracted.
+
 ## Supported Services
 
 - [redis](http://redis.io/)
 - [kafka](https://kafka.apache.org/)
+- [hadoop](https://hadoop.apache.org/) WORK IN PROGRESS
+
+
 
 

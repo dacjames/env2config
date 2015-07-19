@@ -17,6 +17,22 @@ LOG_FORMAT = '[%(asctime)s] env2config.%(module)s %(levelname)s: %(message)s'
 _logger = None
 
 
+def tags_to_dict(tag_list):
+    if tag_list is None or tag_list == []:
+        return {}
+
+    tag_dict = {}
+    for tag_string in tag_list:
+        split_point = tag_string.find('=')
+        if not split_point > 0:
+            raise ValueError('tag arguments must be of the form \'key=value\', not {0}'.format(tag_string))
+        key = tag_string[:split_point]
+        value = tag_string[split_point + 1:]  # +1 to skip '='
+        tag_dict[key] = value
+
+    return tag_dict
+
+
 def create_logger():
     '''Create a logger'''
 

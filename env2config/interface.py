@@ -3,6 +3,8 @@ from abc import ABCMeta, abstractmethod
 from future.utils import with_metaclass
 
 import env2config.util as util
+from env2config.processors import LineProcessor, RewriteProcessor
+
 logger = util.create_logger()
 
 
@@ -29,8 +31,9 @@ class PluginMount(ABCMeta):
 
 class ServiceDefinition(with_metaclass(PluginMount, object)):
 
-    def __init__(self, version):
+    def __init__(self, version, tags):
         self.version = version
+        self.tags = tags
 
     @classmethod
     def get_service_class(cls, service_name):
@@ -51,20 +54,19 @@ class ServiceDefinition(with_metaclass(PluginMount, object)):
         config = list(configs.keys())[0]
         return config, config_name
 
-    @abstractmethod
     def ignore_env_names(self):
-        raise NotImplementedError()
+        return []
 
-    @abstractmethod
     def convert_name(self, config_name):
-        raise NotImplementedError()
+        return config_name
 
-    @abstractmethod
     def convert_value(self, config_value):
-        raise NotImplementedError()
+        return config_value
 
 
 class LineOriented(ServiceDefinition):
+    Processor = LineProcessor
+
     @abstractmethod
     def match_line(self, line, config_name):
         raise NotImplementedError()
@@ -79,10 +81,11 @@ class LineOriented(ServiceDefinition):
 
 
 class RewriteOriented(ServiceDefinition):
+    Processor = RewriteProcessor
     @abstractmethod
     def parse_file(self, text_content):
         raise NotImplementedError()
 
     @abstractmethod
-    def inject_file(self, config_model):
+    def inject_file(self, default_model, config_model):
         raise NotImplementedError()
