@@ -140,6 +140,8 @@ Please submit an issue if the implementation of `env2config` does not follow the
 
 - [redis](http://redis.io/)
 - [kafka](https://kafka.apache.org/)
-- [hadoop](https://hadoop.apache.org/) work in progress!
+- [hadoop](https://hadoop.apache.org/) WORK IN PROGRESS
+
+
 
 
