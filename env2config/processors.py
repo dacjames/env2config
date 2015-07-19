@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import sys
 import os
 from abc import ABCMeta, abstractmethod
@@ -10,8 +11,10 @@ logger = util.create_logger()
 
 
 def write_config(dest, filename, content):
+    content = content.encode('utf-8')
+
     if dest == '-':
-        sys.stdout.write(content)
+        util.write_bytes(sys.stdout, content)
     elif os.path.isdir(dest):
         path = os.path.join(dest, filename)
         with open(path, 'wb') as f:
